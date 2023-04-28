@@ -22,7 +22,7 @@ profile_pic = current_dir / "assets" / "download.png"
 
 
 # Find more emojis here: https://www.webfx.com/tools/emoji-cheat-sheet/
-st.set_page_config(page_title="Text Summarize", page_icon=":blush:", layout="wide")
+st.set_page_config(page_title="Luminious", page_icon=":blush:", layout="wide")
 
 
 def load_lottiefile(filepath: str):
@@ -50,10 +50,11 @@ with open(css_file) as f:
     st.markdown('<style>{}</style>'.format(f.read()), unsafe_allow_html=True)
 
 #####################
+
 # Header 
 st.write('''
-## Text Summarisation
-#### *Team : Aakash & Anusur* 
+## Luminous techathon
+#### *creation : Aakash * 
 
 ''')
 with open(resume_file, "rb") as pdf_file:
@@ -73,71 +74,70 @@ with open(resume_file, "rb") as pdf_file:
   
 st.markdown('## Summary', unsafe_allow_html=True)
 st.info('''
-Text Summarizer is a powerful tool that helps you quickly and easily summarize long pieces of text into concise 
-and informative summaries. Whether you're a student, researcher, or simply someone who needs to read a lot of text on a daily basis, 
-Text Summarizer is an indispensable tool that will save you time and energy. With just a few clicks, 
-Text Summarizer analyzes your text and provides you with a summary that captures the key ideas and information in a way 
-that is easy to read and understand. So why waste time reading through endless pages of text when you can use Text Summarizer
- to get the gist of it in no time? Try it out today and experience the power of text summarization for yourself!
+Harnessing the power of the sun, solar energy generation has emerged as a pivotal solution in our pursuit of sustainable and renewable energy sources.
+ The importance of solar power generation cannot be overstated, as it brings with it a multitude of benefits for individuals, communities, and 
+ the planet as a whole.
 ''')
 
 # Define a function that generates a summary based on the input text and the number of summary lines
-def generate_summary(text, n):
-    # Tokenize the text into individual sentences
-    sentences = sent_tokenize(text)
-    
-    # Tokenize each sentence into individual words and remove stopwords
-    stop_words = set(stopwords.words('english'))
-    words = [word.lower() for word in word_tokenize(text) if word.lower() not in stop_words and word.isalnum()]
-    
-    # Compute the frequency of each word
-    word_freq = Counter(words)
-    
-    # Compute the score for each sentence based on the frequency of its words
-    sentence_scores = {}
+import streamlit as st
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+#from tensorflow.keras.models import load_model
+# Load the saved model
 
-    for sentence in sentences:
-        sentence_words = [word.lower() for word in word_tokenize(sentence) if word.lower() not in stop_words and word.isalnum()]
-        sentence_score = sum([word_freq[word] for word in sentence_words])
-        if len(sentence_words) < 20:
-            sentence_scores[sentence] = sentence_score
-    
-    # Select the top n sentences with the highest scores
-    summary_sentences = sorted(sentence_scores, key=sentence_scores.get, reverse=True)[:n]
-    summary = ' '.join(summary_sentences)
-    
-    return summary
+# loaded_model = load_model("/home/akash/Documents/programming/luminous hackathon ppt/pretrained_model_load/solar_energy_model.h5")
 
-st.markdown('''
-## Let's get to the point with the power of summarization!
-''')
-st_lottie(
-    lottie_hello,
-    speed=1,
-    reverse=False,
-    loop=True,
-    quality="low", # medium ; high
-    height= 200,
-    width=700,
-    key=None,
-)
+def app():
+    # Set Streamlit app title
+    st.title("Solar Energy Output Prediction")
 
-# Define the Streamlit web interface
+    # Create input fields
+    date_hour = st.text_input("Date-Hour(NMT)")
+    wind_speed = st.number_input("Wind Speed")
+    sunshine = st.number_input("Sunshine")
+    air_pressure = st.number_input("Air Pressure")
+    radiation = st.number_input("Radiation")
+    air_temperature = st.number_input("Air Temperature")
+    relative_air_humidity = st.number_input("Relative Air Humidity")
 
-col1, col2 = st.columns(2)
+    # Create submit button
+    submit_button = st.button("Predict")
 
-with col1:
-    text = st.text_area("Enter the text you want to summarize:", height=300)
+    # Perform prediction when the submit button is clicked
+    if submit_button:
+        # Preprocess the input data
+        input_data = pd.DataFrame({
+            "Date-Hour(NMT)": [date_hour],
+            "WindSpeed": [wind_speed],
+            "Sunshine": [sunshine],
+            "AirPressure": [air_pressure],
+            "Radiation": [radiation],
+            "AirTemperature": [air_temperature],
+            "RelativeAirHumidity": [relative_air_humidity]
+        })
 
-with col2:
-    n = st.slider("Number of summary lines", min_value=1, max_value=10, value=5)
+        # Convert "Date-Hour (NMT)" column to datetime
+        input_data["Date-Hour (NMT)"] = pd.to_datetime(input_data["Date-Hour (NMT)"], format="%d.%m.%Y-%H:%M")
 
-if st.button("Generate Summary"):
-    summary = generate_summary(text, n)
-    summary_sentences = summary.split('. ')
-    formatted_summary = '.\n'.join(summary_sentences)
-    st.write("Summary:")
-    st.write(formatted_summary)
+        # Extract the features from the input data
+        input_features = input_data[["WindSpeed", "Sunshine", "AirPressure", "Radiation", "AirTemperature", "RelativeAirHumidity"]]
+
+        # Normalize the input features using the scaler used during training
+        scaler = MinMaxScaler()
+        input_features_scaled = scaler.fit_transform(input_features)
+
+        # Make predictions using the loaded model
+        predictions = loaded_model.predict(input_features_scaled)
+
+        # Display the predictions
+        st.subheader("Prediction Result")
+        st.write("Predicted System Production:", predictions)
+
+if __name__ == "__main__":
+    app()
+
 
 
 
